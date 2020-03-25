@@ -1,0 +1,50 @@
+import com.android.build.gradle.AppExtension
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext.kotlin_version = '1.3.71'
+    repositories {
+        google()
+        jcenter()
+        
+    }
+    dependencies {
+        //classpath 'com.android.tools.build:gradle:4.0.0-beta03'
+        classpath 'com.android.tools.build:gradle:3.6.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    afterEvaluate {
+            if (pluginManager.hasPlugin("com.android.dynamic-feature")) {
+                def appExt = extensions.findByType(AppExtension)
+                appExt.flavorDimensions("default")
+                appExt.productFlavors {
+                        maybeCreate("develop")
+                        maybeCreate("production")
+                    }
+
+                // Workaround for
+                // https://issuetracker.google.com/issues/123441249
+                appExt.applicationVariants.all {
+                    dependencies.add("test${name.capitalize()}RuntimeOnly",
+                            files("${rootProject.projectDir}/app/build/intermediates/" +
+                                    "app_classes/$name/classes.jar")
+                    )
+                }
+            }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
